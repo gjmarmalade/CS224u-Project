@@ -11,9 +11,9 @@ import torch.nn as nn
 from torch.nn import Parameter
 import torch.nn.functional as F
 
-from encoders import Encoder
-from decoders import Decoder
-from discriminator import Discriminator
+from encoders import Encoder_1, Encoder_2
+from decoders import Decoder_1
+from discriminator import Discriminator_1
 from loss import ReconLoss, DiscriminatorLoss
 
 
@@ -59,6 +59,24 @@ class EEDDLoss(nn.Module):
         loss = self.ratios[0]*l1 - self.ratios[1]*l2 + self.ratios[2]*l3 + self.ratios[3]*l4
         return loss
 
+
+
+#%% TRAIN
+def train(loss_ratios, model, Optimizer, opt_params, epochs, trainLoader, device):
+    criterion = EEDDLoss(loss_ratios)
+    optimizer = Optimizer(model.parameters(), lr=opt_params['lr'], momentum=opt_params['momentum'])   # eg: Optimizer = torch.optim.SGD
+    model.to(device)
+    for e in range(epochs):
+        for i, embedded_inputs in enumerate(trainLoader):
+            embedded_inputs = embedded_inputs.to(device)
+            abstract, recon1, recon2, recon3 = model(embedded_inputs)
+            loss = criterion(embedded_inputs, abstract, recon1, recon2, recon3, embedded_inputs)    # real_sentence is set as the original sentence for unsupervise
+            optimizer.zero_grad()   # if don't call zero_grad, the grad of each batch will be accumulated
+            loss.backward()
+            optimizer.step()
+            if i % 20 == 0:
+                print('epoch: {}, batch: {}, loss: {}'.format(e+1, i+1, loss.data))
+    torch.save(model, 'EEDD.pth')
 
 
 

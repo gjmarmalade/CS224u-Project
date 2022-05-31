@@ -20,26 +20,29 @@ import torch.nn.functional as F
 
 
 class Decoder(nn.Module):  # class name should be changed according to different variants
-  def __init__(params):
-    pass
+    def __init__(self, params):
+        super().__init__()
+        pass
   
-  def forward(self, embedded_inputs):
-    pass
+    def forward(self, embedded_inputs):
+        pass
 
 
 
 class Decoder(nn.Module):  # class name should be changed according to different variants
-  def __init__(params):
-    pass
+    def __init__(self, params):
+        super().__init__()
+        pass
   
-  def forward(self, embedded_inputs):
-    pass
+    def forward(self, embedded_inputs):
+        pass
 
 
 
 class Decoder(nn.Module):  # class name should be changed according to different variants
-  def __init__(params):
-    pass
+    def __init__(params):
+        super().__init__()
+        pass
   
-  def forward(self, embedded_inputs):
-    pass
+    def forward(self, embedded_inputs):
+        pass
