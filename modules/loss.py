@@ -12,6 +12,8 @@ import torch.nn as nn
 from torch.nn import Parameter
 import torch.nn.functional as F
 
+
+
 """
 params: dict
 {
@@ -42,7 +44,13 @@ class DiscriminatorLoss(nn.Module):
         self.params = params
     
     def forward(self, abstract, reality):
-        pass
+        x_fake = abstract
+        x_real = reality
+        discriminator = self.params['discriminator']
+        d_real = discriminator(x_real)
+        d_fake = discriminator(x_fake)
+        d_loss = torch.log(d_real).mean() - torch.log(1-d_fake).mean()
+        return d_loss
 
 
 
