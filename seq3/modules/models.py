@@ -44,6 +44,7 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
         kwargs["rnn_size"] = kwargs.get("dec_rnn_size", kwargs.get("rnn_size"))
         enc_size = self.inp_encoder.rnn_size
         self.compressor = AttSeqDecoder(self.n_tokens, enc_size, **kwargs)
+        self.compressor_for_minor = AttSeqDecoder(self.n_tokens, enc_size, **kwargs)
         self.decompressor = AttSeqDecoder(self.n_tokens, enc_size, **kwargs)
 
         # create a dummy embedding layer, which will retrieve the idf values
@@ -197,6 +198,10 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
         L1-encoder -> L2-decoder
 
         """
+        # ********************************************
+        # Phase 1: Compression
+        # ********************************************
+
         # --------------------------------------------
         # ENCODER-1 (Compression)
         # --------------------------------------------
@@ -205,7 +210,7 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
         outs_enc1, hn_enc1 = enc1_results[-2:]
 
         # --------------------------------------------
-        # DECODER-1 (Compression)
+        # DECODER-1 (Compression) (for Abstract)
         # --------------------------------------------
         _dec1_init = self._bridge(self.src_bridge, hn_enc1, src_lengths,
                                   latent_lengths)
@@ -217,7 +222,22 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
         logits_dec1, outs_dec1, _, dists_dec1, _, _ = dec1_results
 
         # --------------------------------------------
-        # ENCODER-2 (Reconstruction)
+        # DECODER-2 (Compression) (for Minor Info)
+        # --------------------------------------------
+        _dec_for_minor_init = self._bridge(self.src_bridge, hn_enc1, src_lengths,
+                                  latent_lengths)
+        dec1_results_for_minor = self.self.compressor_for_minor(inp_fake, outs_enc1, _dec_for_minor_init,
+                                       enc_lengths=src_lengths,
+                                       sampling_prob=1., hard=hard, tau=tau,
+                                       desired_lengths=latent_lengths)
+        logits_dec1_for_minor , outs_dec1_for_minor , _, dists_dec1_for_minor , _, _  = dec1_results_for_minor
+
+        # **********************************************************
+        # Phase 2: Reconstruction
+        # **********************************************************
+
+        # --------------------------------------------
+        # ENCODER-2 (Reconstruction from Abstract)
         # --------------------------------------------
         cmp_embeddings = self.compressor.embed.expectation(dists_dec1)
         cmp_lengths = latent_lengths - 1
@@ -231,7 +251,7 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
         outs_enc2, hn_enc2 = enc2_results[-2:]
 
         # --------------------------------------------
-        # DECODER-2 (Reconstruction)
+        # DECODER-2 (Reconstruction from Abstract)
         # --------------------------------------------
         dec2_lengths = src_lengths + 1  # <sos> + src
         _dec2_init = self._bridge(self.trg_bridge, hn_enc2, cmp_lengths,
@@ -243,4 +263,32 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
                                          desired_lengths=dec2_lengths,
                                          word_dropout=self.dec_token_dropout)
 
-        return enc1_results, dec1_results, enc2_results, dec2_results
+        # --------------------------------------------
+        # ENCODER-2 (Reconstruction from Full Info)
+        # --------------------------------------------
+        dists_dec1_full_info = torch.concat(dists_dec1, dists_dec1_for_minor)
+        cmp_embeddings_full_info = self.compressor.embed.expectation(dists_dec1_full_info)
+        cmp_lengths_full_info = latent_lengths - 1
+
+        # !!! Limit the communication only through the embs
+        # The compression encoder reads only the sampled embeddings
+        # so it is initialized with a zero state
+        enc2_init_full_info = None
+        enc2_results_full_info = self.cmp_encoder.encode(cmp_embeddings_full_info, enc2_init_full_info,
+                                               cmp_lengths_full_info)
+        outs_enc2_full_info, hn_enc2_full_info = enc2_results_full_info[-2:]
+
+        # --------------------------------------------
+        # DECODER-2 (Reconstruction from Full Info)
+        # --------------------------------------------
+        dec2_lengths_full_info = src_lengths + 1  # <sos> + src
+        _dec2_init_full_info = self._bridge(self.trg_bridge, hn_enc2_full_info, cmp_lengths_full_info,
+                                  dec2_lengths_full_info)
+        dec2_results_full_info = self.decompressor(inp_trg, outs_enc2_full_info, _dec2_init_full_info,
+                                         enc_lengths=cmp_lengths_full_info,
+                                         sampling_prob=sampling,
+                                         tau=tau,
+                                         desired_lengths=dec2_lengths_full_info,
+                                         word_dropout=self.dec_token_dropout)
+
+        return enc1_results, dec1_results, dec1_results_for_minor, enc2_results, dec2_results,  enc2_results_full_info, dec2_results_full_info
