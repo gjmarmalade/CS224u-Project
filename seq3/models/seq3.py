@@ -10,6 +10,9 @@ from torch import nn
 from torch.distributions import Categorical
 from torch.utils.data import DataLoader
 
+import sys
+sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project/seq3')
+
 from generate.utils import devectorize
 from models.seq3_trainer import Seq3Trainer
 from models.seq3_utils import compute_dataset_idf

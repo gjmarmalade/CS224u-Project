@@ -1,7 +1,7 @@
 import torch
 from numpy import mean
 from torch.nn import functional as F
-from torch.nn.functional import _gumbel_softmax_sample
+#from torch.nn.functional import _gumbel_softmax_sample
 
 
 def sequence_mask(lengths, max_len=None):

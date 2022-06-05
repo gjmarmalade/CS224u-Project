@@ -6,7 +6,8 @@ from torch import nn, optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau, \
     StepLR
 from torch.utils.data import DataLoader
-
+import sys
+sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project/seq3')
 from models.sent_lm_trainer import LMTrainer
 from modules.data.collates import LMCollate
 from modules.data.datasets import SentenceLMDataset
