@@ -1,6 +1,8 @@
 import torch
 from torch.nn import functional as F
 
+import sys 
+sys.path.append("..")
 from models.seq3_losses import _kl_div, kl_length, pairwise_loss
 from models.seq3_utils import sample_lengths
 from modules.helpers import sequence_mask, avg_vectors, module_grad_wrt_loss
@@ -134,7 +136,8 @@ class Seq3Trainer(Trainer):
         outputs = self.model(inp_x, inp_xhat,
                              x_lengths, latent_lengths, sampling, tau)
 
-        enc1, dec1, enc2, dec2 = outputs
+        ## enc1, dec1, enc2, dec2 = outputs
+        enc1, dec1, dec1_minor, enc2, dec2, enc2_full, dec2_full = outputs
 
         batch_outputs = {"model_outputs": outputs}
 
@@ -143,11 +146,20 @@ class Seq3Trainer(Trainer):
         # --------------------------------------------------------------
         # reconstruct_loss = self._seq_loss(dec2[0], out_xhat)
 
+        # abstract loss
         _dec2_logits = dec2[0].contiguous().view(-1, dec2[0].size(-1))
         _x_labels = out_xhat.contiguous().view(-1)
-        reconstruct_loss = F.cross_entropy(_dec2_logits, _x_labels,
+        rec_loss_abstract = F.cross_entropy(_dec2_logits, _x_labels,
                                            ignore_index=0,
                                            reduction='none')
+        # full_info loss
+        _dec2_full_logits = dec2_full[0].contiguous().view(-1, dec2[0].size(-1))
+        _x_labels = out_xhat.contiguous().view(-1)
+        rec_loss_full = F.cross_entropy(_dec2_full_logits, _x_labels,
+                                           ignore_index=0,
+                                           reduction='none')
+        # add together
+        reconstruct_loss = rec_loss_abstract + rec_loss_full    # weight?
 
         reconstruct_loss_token = reconstruct_loss.view(out_xhat.size())
         batch_outputs["reconstruction"] = reconstruct_loss_token
