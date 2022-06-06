@@ -9,7 +9,6 @@ from tabulate import tabulate
 from torch import nn
 from torch.distributions import Categorical
 from torch.utils.data import DataLoader
-
 import sys
 sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project/seq3')
 
@@ -423,7 +422,9 @@ def save_best():
 
 
 for epoch in range(config["epochs"]):
+    import pdb; pdb.set_trace()
     train_loss = trainer.train_epoch()
 
     # Save the model if the validation loss is the best we've seen so far.
     save_best()
+

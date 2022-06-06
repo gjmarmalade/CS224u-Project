@@ -27,6 +27,7 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
         self.topic_idf = kwargs.get("topic_idf", False)
         self.dec_token_dropout = kwargs.get("dec_token_dropout", .0)
         self.enc_token_dropout = kwargs.get("enc_token_dropout", .0)
+        self.use_minor_info = kwargs.get("use_minor_info", False)
 
         # tie embedding layers to output layers (vocabulary projections)
         kwargs["tie_weights"] = kwargs.get("tie_embedding_outputs", False)
@@ -220,17 +221,21 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
                                        sampling_prob=1., hard=hard, tau=tau,
                                        desired_lengths=latent_lengths)
         logits_dec1, outs_dec1, _, dists_dec1, _, _ = dec1_results
+        import pdb
+        # pdb.set_trace()
 
         # --------------------------------------------
-        # DECODER-2 (Compression) (for Minor Info)
+        # DECODER- (Compression) (for Minor Info)
         # --------------------------------------------
         _dec_for_minor_init = self._bridge(self.src_bridge, hn_enc1, src_lengths,
                                   latent_lengths)
-        dec1_results_for_minor = self.self.compressor_for_minor(inp_fake, outs_enc1, _dec_for_minor_init,
+        # use the same decoder initialization
+        dec1_results_for_minor = self.compressor_for_minor(inp_fake, outs_enc1, _dec_for_minor_init,
                                        enc_lengths=src_lengths,
                                        sampling_prob=1., hard=hard, tau=tau,
                                        desired_lengths=latent_lengths)
         logits_dec1_for_minor , outs_dec1_for_minor , _, dists_dec1_for_minor , _, _  = dec1_results_for_minor
+        # pdb.set_trace()
 
         # **********************************************************
         # Phase 2: Reconstruction
@@ -262,33 +267,41 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
                                          tau=tau,
                                          desired_lengths=dec2_lengths,
                                          word_dropout=self.dec_token_dropout)
-
+        pdb.set_trace()
         # --------------------------------------------
         # ENCODER-2 (Reconstruction from Full Info)
         # --------------------------------------------
-        dists_dec1_full_info = torch.concat(dists_dec1, dists_dec1_for_minor)
-        cmp_embeddings_full_info = self.compressor.embed.expectation(dists_dec1_full_info)
-        cmp_lengths_full_info = latent_lengths - 1
+        if self.use_minor_info:
+            cmp_embeddings_from_minor = self.compressor.embed.expectation(dists_dec1_for_minor) # [20, 5, 100]
 
-        # !!! Limit the communication only through the embs
-        # The compression encoder reads only the sampled embeddings
-        # so it is initialized with a zero state
-        enc2_init_full_info = None
-        enc2_results_full_info = self.cmp_encoder.encode(cmp_embeddings_full_info, enc2_init_full_info,
-                                               cmp_lengths_full_info)
-        outs_enc2_full_info, hn_enc2_full_info = enc2_results_full_info[-2:]
+            cmp_lengths_full_info = 2 * (latent_lengths - 1) # abstract + minor info
+            # dists_dec1_full_info = torch.cat([dists_dec1, dists_dec1_for_minor], dim=2)
+            cmp_embeddings_full_info = torch.cat([cmp_embeddings, cmp_embeddings_from_minor], dim=1) # [20, 10, 100]
 
-        # --------------------------------------------
-        # DECODER-2 (Reconstruction from Full Info)
-        # --------------------------------------------
-        dec2_lengths_full_info = src_lengths + 1  # <sos> + src
-        _dec2_init_full_info = self._bridge(self.trg_bridge, hn_enc2_full_info, cmp_lengths_full_info,
-                                  dec2_lengths_full_info)
-        dec2_results_full_info = self.decompressor(inp_trg, outs_enc2_full_info, _dec2_init_full_info,
-                                         enc_lengths=cmp_lengths_full_info,
-                                         sampling_prob=sampling,
-                                         tau=tau,
-                                         desired_lengths=dec2_lengths_full_info,
-                                         word_dropout=self.dec_token_dropout)
+            # !!! Limit the communication only through the embs
+            # The compression encoder reads only the sampled embeddings
+            # so it is initialized with a zero state
+            enc2_init_full_info = None
+            enc2_results_full_info = self.cmp_encoder.encode(cmp_embeddings_full_info, enc2_init_full_info,
+                                                   cmp_lengths_full_info)
+            outs_enc2_full_info, hn_enc2_full_info = enc2_results_full_info[-2:]
 
-        return enc1_results, dec1_results, dec1_results_for_minor, enc2_results, dec2_results,  enc2_results_full_info, dec2_results_full_info
+            # --------------------------------------------
+            # DECODER-2 (Reconstruction from Full Info)
+            # --------------------------------------------
+            dec2_lengths_full_info = src_lengths + 1  # <sos> + src
+            _dec2_init_full_info = self._bridge(self.trg_bridge, hn_enc2_full_info, cmp_lengths_full_info,
+                                      dec2_lengths_full_info)
+            dec2_results_full_info = self.decompressor(inp_trg, outs_enc2_full_info, _dec2_init_full_info,
+                                             enc_lengths=cmp_lengths_full_info,
+                                             sampling_prob=sampling,
+                                             tau=tau,
+                                             desired_lengths=dec2_lengths_full_info,
+                                             word_dropout=self.dec_token_dropout)
+
+            pdb.set_trace()
+            return enc1_results, dec1_results, dec1_results_for_minor, enc2_results, dec2_results,  enc2_results_full_info, dec2_results_full_info
+
+        else:
+            return enc1_results, dec1_results, enc2_results, dec2_results
+

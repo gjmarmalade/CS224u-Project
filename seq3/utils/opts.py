@@ -38,6 +38,7 @@ def train_options():
     parser.add_argument('--cores', type=int, default=1)
     parser.add_argument('--source', nargs='*',
                         default=["models", "modules", "utils"])
+    parser.add_argument('--use_minor_info',  type=bool, default=True)
 
     args = parser.parse_args()
     config = load_config(args.config)
@@ -108,3 +109,4 @@ def seq2seq2seq_options():
     print()
 
     return args, config
+

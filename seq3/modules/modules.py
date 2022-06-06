@@ -689,3 +689,4 @@ class AttSeqDecoder(nn.Module):
             taus = torch.stack(taus, dim=1).squeeze()
 
         return logits, outputs, state, dists, attentions, taus
+

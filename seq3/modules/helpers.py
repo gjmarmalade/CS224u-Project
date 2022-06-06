@@ -2,7 +2,7 @@ import torch
 from numpy import mean
 from torch.nn import functional as F
 #from torch.nn.functional import _gumbel_softmax_sample
-
+from torch.autograd import Variable
 
 def sequence_mask(lengths, max_len=None):
     """
@@ -37,7 +37,7 @@ def masked_mean(vecs, mask):
 
 
 def masked_normalization_inf(logits, mask):
-    logits.masked_fill_(1 - mask, float('-inf'))
+    logits.masked_fill_(~mask, float('-inf'))
     # energies.masked_fill_(1 - mask, -1e18)
 
     scores = F.softmax(logits, dim=-1)
@@ -69,6 +69,15 @@ def straight_softmax(logits, tau=1, hard=False, target_mask=None):
     else:
         return y_soft
 
+def sample_gumbel(shape, eps=1e-20):
+    U = torch.rand(shape).cuda()
+    return -Variable(torch.log(-torch.log(U + eps) + eps))
+
+def gumbel_softmax_sample(logits, temperature, eps):
+    y = logits + sample_gumbel(logits.size(), eps)
+    return F.softmax(y / temperature, dim=-1)
+
+# def gumbel_softmax_sample(logits, temperature, eps):
 
 def gumbel_softmax(logits, tau=1, hard=False, eps=1e-10, target_mask=None):
     r"""
@@ -95,7 +104,8 @@ def gumbel_softmax(logits, tau=1, hard=False, eps=1e-10, target_mask=None):
     """
     shape = logits.size()
     assert len(shape) == 2
-    y_soft = _gumbel_softmax_sample(logits, tau=tau, eps=eps)
+    # y_soft = _gumbel_softmax_sample(logits, tau=tau, eps=eps)
+    y_soft = gumbel_softmax_sample(logits, temperature=tau, eps=eps)
 
     if target_mask is not None:
         y_soft = y_soft * target_mask.float()
@@ -154,3 +164,4 @@ def module_grad_wrt_loss(optimizers, module, loss, prefix=None):
         optimizer.zero_grad()
 
     return mean_norm
+

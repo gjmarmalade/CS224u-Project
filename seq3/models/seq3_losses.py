@@ -75,7 +75,7 @@ def kl_length(logits, lengths, eos):
 
     """
     mask = sequence_mask(lengths - 1, lengths.max())
-    eos_labels = ((1 - mask) * eos).long().contiguous().view(-1)
+    eos_labels = (~(mask) * eos).long().contiguous().view(-1)
 
     _logits = logits.contiguous().view(-1, logits.size(-1))
     loss = F.cross_entropy(_logits, eos_labels, ignore_index=0)
@@ -94,3 +94,4 @@ def pairwise_loss(a, b, dist="cosine"):
         return - scaled_dot
     else:
         raise ValueError
+
