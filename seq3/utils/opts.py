@@ -81,6 +81,7 @@ def seq2seq2seq_options():
     parser.add_argument('--cores', type=int, default=4)
     parser.add_argument('--source', nargs='*',
                         default=["models", "modules", "utils"])
+    parser.add_argument('--use_minor_info', type=bool, default=True)
 
     args = parser.parse_args()
     config = load_config(args.config)

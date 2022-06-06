@@ -272,10 +272,15 @@ def samples_to_text(tensor):
                        train_data.vocab.tok2id[vocab.EOS],
                        strip_eos=False, pp=False)
 
-
+use_minor_info = True
 def outs_callback(batch, losses, loss_list, batch_outputs):
     if trainer.step % config["log_interval"] == 0:
-        enc1, dec1, enc2, dec2 = batch_outputs['model_outputs']
+        if use_minor_info:
+            enc1, dec1, dec1_minor, enc2, dec2, enc2_full, dec2_full = batch_outputs['model_outputs']
+        else:
+            enc1, dec1, enc2, dec2 = batch_outputs['model_outputs']
+
+        # enc1, dec1, enc2, dec2 = batch_outputs['model_outputs']
 
         if config["plot_norms"]:
             norms = batch_outputs['grad_norm']
@@ -347,8 +352,7 @@ def outs_callback(batch, losses, loss_list, batch_outputs):
 
         html_samples = samples2html(samples)
         exp.update_value("samples", html_samples)
-        with open(os.path.join(EXP_DIR, f"{opts.name}.samples.html"),
-                  'w') as f:
+        with open(os.path.join(EXP_DIR, f"{opts.name}.samples.html"),'w') as f:
             f.write(html_samples)
 
 
@@ -422,7 +426,7 @@ def save_best():
 
 
 for epoch in range(config["epochs"]):
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     train_loss = trainer.train_epoch()
 
     # Save the model if the validation loss is the best we've seen so far.

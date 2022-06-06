@@ -211,7 +211,7 @@ class Seq3Trainer(Trainer):
                 mean_rec_loss,
                 prior_loss,
                 topic_loss)
-        pdb.set_trace()
+        # pdb.set_trace()
 
         return losses, batch_outputs
 

@@ -267,7 +267,7 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
                                          tau=tau,
                                          desired_lengths=dec2_lengths,
                                          word_dropout=self.dec_token_dropout)
-        pdb.set_trace()
+        # pdb.set_trace()
         # --------------------------------------------
         # ENCODER-2 (Reconstruction from Full Info)
         # --------------------------------------------
@@ -299,7 +299,7 @@ class Seq2Seq2Seq(nn.Module, RecurrentHelper):
                                              desired_lengths=dec2_lengths_full_info,
                                              word_dropout=self.dec_token_dropout)
 
-            pdb.set_trace()
+            # pdb.set_trace()
             return enc1_results, dec1_results, dec1_results_for_minor, enc2_results, dec2_results,  enc2_results_full_info, dec2_results_full_info
 
         else:
