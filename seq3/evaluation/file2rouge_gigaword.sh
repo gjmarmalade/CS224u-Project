@@ -5,8 +5,8 @@
 #
 
 
-files2rouge ./hyps/gigaword_seq3_whole_dataset_use_minor_info_preds.txt ./gigaword/task1_ref0_min8.txt -a " -m -n 2 -w 1.2 -a" -s ./results/gigaword_full_results_ours_with_minor_info.txt
-files2rouge ./hyps_original/gigaword_seq3.full_preds.txt ./gigaword/task1_ref0_min8.txt -a " -m -n 2 -w 1.2 -a" -s ./results/seq3_baseline_gigaword_full_results.txt
+files2rouge ./hyps/gigaword_seq3_whole_dataset_use_minor_info_lm_prior_2_50000_preds.txt ./gigaword/task1_ref0_min8.txt -a " -m -n 2 -w 1.2 -a" -s ./results/gigaword_full_results_ours_with_minor_info.txt
+#files2rouge ./hyps_original/gigaword_seq3.full_preds.txt ./gigaword/task1_ref0_min8.txt -a " -m -n 2 -w 1.2 -a" -s ./results/seq3_baseline_gigaword_full_results.txt
 #files2rouge ./hyps/gigaword_full-prior_preds.txt ./gigaword/task1_ref0_min8.txt -a " -m -n 2 -w 1.2 -a" -s ./results/gigaword_full-prior_results.txt
 #files2rouge ./hyps/gigaword_full-topic_preds.txt ./gigaword/task1_ref0_min8.txt -a " -m -n 2 -w 1.2 -a" -s ./results/gigaword_full-topic_results.txt
 

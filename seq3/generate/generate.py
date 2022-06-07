@@ -6,7 +6,7 @@ sys.path.append('../')
 from utils import compress_seq3
 from sys_config import BASE_DIR
 
-checkpoint = "seq3_whole_dataset_use_minor_info"
+checkpoint = "seq3_whole_dataset_use_minor_info_lm_prior_3_65000"
 seed = 1
 device = "cuda"
 verbose = False
