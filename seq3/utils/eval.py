@@ -43,6 +43,8 @@ def pprint_rouge_scores(scores, pivot=False):
 
     table = tabulate(pdt,
                      headers='keys',
-                     floatfmt=".4f", tablefmt="psql")
+                     floatfmt=".6f", tablefmt="psql")
+    print(table)
 
     return table
+

@@ -4,11 +4,14 @@ from itertools import groupby
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import sys
 
+sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project/seq3')
+sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project')
 from modules.data.collates import Seq2SeqOOVCollate
 from modules.data.datasets import AEDataset
 from modules.models import Seq2Seq2Seq
-from utils.training import load_checkpoint
+from seq3.utils.training import load_checkpoint
 
 
 def compress_seq3(checkpoint, src_file, out_file,
@@ -142,3 +145,4 @@ def devectorize(data, id2tok, eos, strip_eos=True, oov_map=None, pp=True):
         data = [[x[0] for x in groupby(seq)] for seq in data]
 
     return data
+

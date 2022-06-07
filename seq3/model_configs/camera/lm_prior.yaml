@@ -13,8 +13,8 @@ milestones: [5,15]
 
 parallel: False
 data:
-  train_path: gigaword/train.article.txt
-  val_path:   gigaword/valid.article.filter.txt
+  train_path: sumdata/train/train.article.txt
+  val_path:   sumdata/train/valid.article.filter.txt
   seq_len: 60   # maximum length of texts (in words)
   stateful: False # Leave it to False. True is used for document level language modeling.
   sos: True       # Add a Start-of-SequenceSOS token

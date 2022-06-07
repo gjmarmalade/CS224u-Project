@@ -373,6 +373,9 @@ def eval_callback(batch, losses, loss_list, batch_outputs):
         hyps = [" ".join(x) for x in tokens]
         scores = rouge_file_list(config["data"]["ref_path"], hyps)
 
+        import pdb
+        # pdb.set_trace()
+
         rouge_table = pprint_rouge_scores(scores)
         exp.update_value("rouge-stats", rouge_table)
         exp.update_metric("rouge", scores['rouge-1']['f'], "R-1")

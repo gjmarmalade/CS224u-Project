@@ -1,11 +1,12 @@
 import os
 
 import torch
-
-from generate.utils import compress_seq3
+import sys
+sys.path.append('../')
+from utils import compress_seq3
 from sys_config import BASE_DIR
 
-checkpoint = "seq3"
+checkpoint = "seq3_whole_dataset_use_minor_info"
 seed = 1
 device = "cuda"
 verbose = False
@@ -31,3 +32,4 @@ for name, src_file in datasets.items():
                             f"evaluation/hyps/{name}_{checkpoint}_preds.txt")
 
     compress_seq3(checkpoint, src_file, out_file, device, mode="results")
+

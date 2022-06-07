@@ -3,9 +3,10 @@ from collections.__init__ import Counter
 import numpy
 from gensim.models import FastText
 from tqdm import tqdm
-
-from utils.load_embeddings import load_word_vectors
-
+import sys
+sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project/seq3_baseline/seq3')
+sys.path.append('/dfs/user/yinanzy/yinan_projs/S2022/cs224u/CS224u-Project/seq3_baseline')
+from seq3.utils.load_embeddings import load_word_vectors
 
 class Vocab(object):
     """
@@ -153,3 +154,4 @@ class Vocab(object):
 
     def __len__(self):
         return len(self.tok2id)
+
